@@ -391,7 +391,7 @@ function scheduleOnlineBot(){
   const cp=gs.currentPlayer;
   const p=players[cp];
   if(p&&p.isBot){
-    setTimeout(()=>onlineBotTurn(cp),1500+Math.random()*1200);
+    setTimeout(()=>onlineBotTurn(cp),800+Math.random()*700);
   }
 }
 function onlineBotTurn(seat){
@@ -584,14 +584,14 @@ function playSolo(p,ci){
   }else{adv();}
 
   render();checkWin();
-  if(gs.currentPlayer!==0)setTimeout(botTurn,1500+Math.random()*1200);
+  if(gs.currentPlayer!==0)setTimeout(botTurn,800+Math.random()*700);
 }
 
 function botTurn(){
   if(!gs||gs.currentPlayer===0)return;
   const p=gs.currentPlayer;
   let ok=[];gs.hands[p].forEach((c,i)=>{if(canPlay(c))ok.push(i);});
-  if(ok.length===0){gs.hands[p].push(...draw(1));adv();render();if(gs.currentPlayer!==0)setTimeout(botTurn,1500+Math.random()*1200);return;}
+  if(ok.length===0){gs.hands[p].push(...draw(1));adv();render();if(gs.currentPlayer!==0)setTimeout(botTurn,800+Math.random()*700);return;}
   const pick=ok[Math.floor(Math.random()*ok.length)];
   setTimeout(()=>playSolo(p,pick),800);
 }
