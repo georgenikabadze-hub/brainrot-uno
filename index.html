@@ -32,7 +32,7 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: #1a0a2e; colo
 .player-label { font-size:13px; font-weight:700; padding:4px 12px; border-radius:20px; background:rgba(0,0,0,0.6); white-space:nowrap; }
 .player-label.active { position:relative; }
 .player-label.active::before { content:''; display:inline-block; width:14px; height:14px; background:#ff2020; border-radius:50%; margin-right:6px; vertical-align:middle; box-shadow:0 0 8px #ff2020, 0 0 16px rgba(255,32,32,0.5); animation: pulse-dot 1s infinite; }
-@keyframes pulse-dot { 0%,100%{box-shadow:0 0 8px #ff2020, 0 0 16px rgba(255,32,32,0.5)} 50%{box-shadow:0 0 12px #ff2020, 0 0 28px rgba(255,32,32,0.6)} }
+@keyframes pulse-dot { 0%,100%{opacity:1; box-shadow:0 0 8px #ff2020, 0 0 16px rgba(255,32,32,0.5)} 50%{opacity:0.2; box-shadow:0 0 4px #ff2020, 0 0 8px rgba(255,32,32,0.3)} }
 
 .player-cards { display:flex; gap:-20px; }
 .player-area.left .player-cards, .player-area.right .player-cards { flex-direction:column; gap:-30px; }
