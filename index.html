@@ -14,7 +14,7 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: #1a0a2e; colo
 
 /* Center pile */
 .center { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); display:flex; gap:12px; align-items:center; z-index:10; }
-.pile-card { width:80px; height:120px; border-radius:12px; display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:32px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); border:3px solid rgba(255,255,255,0.3); cursor:pointer; transition: transform 0.15s; }
+.pile-card { width:100px; height:145px; border-radius:14px; display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:36px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); border:3px solid rgba(255,255,255,0.3); cursor:pointer; transition: transform 0.15s; }
 .pile-card:hover { transform:scale(1.05); }
 .draw-pile { background: linear-gradient(135deg, #2d1b69, #1a0a2e); cursor:pointer; font-size:14px; font-weight:bold; text-align:center; line-height:1.3; }
 .draw-pile:hover { background: linear-gradient(135deg, #3d2b79, #2a1a3e); }
@@ -37,13 +37,13 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: #1a0a2e; colo
 .player-area.left .player-cards, .player-area.right .player-cards { flex-direction:column; gap:-30px; }
 
 /* Cards */
-.card { width:70px; height:105px; border-radius:10px; display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:24px; box-shadow: 0 2px 8px rgba(0,0,0,0.4); border:2px solid rgba(255,255,255,0.2); transition: transform 0.15s, margin-top 0.15s; cursor:default; flex-shrink:0; position:relative; }
+.card { width:90px; height:130px; border-radius:12px; display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:28px; box-shadow: 0 2px 8px rgba(0,0,0,0.4); border:2px solid rgba(255,255,255,0.2); transition: transform 0.15s, margin-top 0.15s; cursor:default; flex-shrink:0; position:relative; }
 .card.small { width:40px; height:60px; font-size:16px; border-radius:8px; }
-.card-label { font-size:8px; font-weight:700; margin-top:2px; text-shadow:0 1px 2px rgba(0,0,0,0.5); }
+.card-label { font-size:10px; font-weight:700; margin-top:4px; text-shadow:0 1px 2px rgba(0,0,0,0.5); }
 .card.small .card-label { font-size:6px; }
-.card-img { width:38px; height:38px; object-fit:contain; filter:drop-shadow(0 1px 2px rgba(0,0,0,0.4)); }
+.card-img { width:52px; height:52px; object-fit:contain; filter:drop-shadow(0 1px 2px rgba(0,0,0,0.4)); }
 .card.small .card-img { width:22px; height:22px; }
-.pile-card .card-img { width:50px; height:50px; }
+.pile-card .card-img { width:60px; height:60px; }
 .player-avatar { width:28px; height:28px; object-fit:contain; border-radius:50%; vertical-align:middle; margin-right:4px; }
 
 .card.playable { cursor:pointer; border-color:rgba(255,255,0,0.6); }
@@ -101,10 +101,11 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: #1a0a2e; colo
 
 /* Responsive */
 @media(max-width:600px) {
-  .card { width:56px; height:84px; font-size:20px; border-radius:8px; }
-  .card.small { width:32px; height:48px; font-size:14px; }
-  .card-img { width:32px; height:32px; }
-  .pile-card { width:64px; height:96px; font-size:28px; }
+  .card { width:68px; height:100px; font-size:22px; border-radius:10px; }
+  .card.small { width:34px; height:50px; font-size:14px; }
+  .card-img { width:40px; height:40px; }
+  .pile-card { width:80px; height:116px; font-size:30px; }
+  .pile-card .card-img { width:48px; height:48px; }
   .player-label { font-size:11px; }
   .player-avatar { width:22px; height:22px; }
 }
@@ -324,7 +325,7 @@ function render() {
     let playable = currentPlayer === 0 && gameActive && canPlay(card);
     el.className = 'card ' + cardColorClass(card) + (playable ? ' playable' : '');
     el.innerHTML = '<span>' + cardEmoji(card, true) + '</span><span class="card-label">' + cardLabel(card) + '</span>';
-    let overlap = hands[0].length > 12 ? -30 : hands[0].length > 8 ? -22 : -15;
+    let overlap = hands[0].length > 12 ? -45 : hands[0].length > 8 ? -35 : -25;
     el.style.marginLeft = i > 0 ? overlap+'px' : '0';
     if (playable) el.onclick = () => playCard(0, i);
     p0.appendChild(el);
