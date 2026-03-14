@@ -39,8 +39,6 @@ body { font-family:'Segoe UI',system-ui,sans-serif; background:#1a0a2e; color:#f
 .player-slot .slot-name { font-size:12px; font-weight:600; }
 .player-slot .slot-empty { font-size:24px; opacity:0.3; }
 .share-hint { font-size:13px; color:#64748b; text-align:center; max-width:280px; }
-.timer { font-size:64px; font-weight:900; color:#ff6b00; text-shadow:0 0 20px rgba(255,107,0,0.4); }
-.timer-label { font-size:14px; color:#94a3b8; }
 
 /* ── Join ── */
 .join { background:linear-gradient(135deg,#0f172a,#1e293b); padding:20px; }
@@ -154,19 +152,18 @@ body { font-family:'Segoe UI',system-ui,sans-serif; background:#1a0a2e; color:#f
   <h1>BRAINROT UNO</h1>
   <p class="subtitle">ტრალალერო ტრალალა × ბომბარდირო კროკოდილო</p>
   <div class="btn-group">
-    <button class="btn btn-orange" onclick="startSolo()">მარტო თამაში 🤖</button>
-    <button class="btn btn-purple" onclick="showCreate()">ონლაინ თამაში 🌐</button>
+    <button class="btn btn-orange" onclick="startSolo()">1 მოთამაშე + 3 ბოტი 🤖</button>
+    <button class="btn btn-purple" onclick="joinOnline(2)">2 მოთამაშე + 2 ბოტი</button>
+    <button class="btn btn-purple" onclick="joinOnline(3)">3 მოთამაშე + 1 ბოტი</button>
+    <button class="btn btn-dark" onclick="joinOnline(4)">4 მოთამაშე</button>
   </div>
 </div>
 
 <!-- ═══ LOBBY ═══ -->
 <div class="screen lobby" id="lobbyScreen">
-  <div class="timer" id="timerEl">60</div>
-  <p class="timer-label">წამში თამაში დაიწყება</p>
+  <h2 id="lobbyTitle">ელოდება მოთამაშეებს...</h2>
   <div class="player-slots" id="playerSlots"></div>
-  <button class="btn btn-purple" onclick="shareLink()" style="font-size:18px;padding:14px 32px">გაგზავნე ლინკი 📤</button>
-  <p class="share-hint">ოჯახს გაუგზავნე — ვინც შემოვა ავტომატურად ემატება. ცარიელ ადგილებზე ბოტები დაჯდებიან.</p>
-  <button class="btn btn-orange" id="startNowBtn" style="display:none" onclick="startNow()">ახლავე დაწყება ▶</button>
+  <p class="share-hint" id="lobbyHint">ვინც ამ ღილაკს დააჭერს, ავტომატურად შემოვა</p>
   <button class="btn btn-dark" onclick="leaveRoom()">გასვლა</button>
 </div>
 
@@ -247,7 +244,7 @@ let players=[];  // [{id,charId,name,img,seat}]
 let gs=null;     // game state
 let solo=false;
 let unoCallable=false, unoTimer=null;
-let lobbyTimer=null, lobbySeconds=60;
+let needHumans=2; // how many humans needed
 
 /* ═══════════════════════════════════════════
    SCREENS
@@ -255,49 +252,23 @@ let lobbyTimer=null, lobbySeconds=60;
 function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
 function initSB(){if(!sb)sb=window.supabase.createClient(SB_URL,SB_KEY);}
 
-/* ═══ MENU ═══ */
-function showCreate(){
-  initSB(); isHost=true;
-  roomCode=genCode();
-  // Pick random character for host
+/* ═══ ONLINE JOIN ═══ */
+function joinOnline(humanCount){
+  initSB(); needHumans=humanCount;
   myChar=CHARS[Math.floor(Math.random()*CHARS.length)];
-  mySeat=0;
-  players=[{id:myId,charId:myChar.id,name:myChar.name,img:myChar.img,seat:0}];
-  renderSlots(); showScreen('lobbyScreen'); joinChan(); startLobbyTimer();
-}
-function autoJoin(code){
-  initSB(); isHost=false;
-  roomCode=code;
-  myChar=CHARS[Math.floor(Math.random()*CHARS.length)];
+  roomCode='MAIN'+humanCount; // one global room per mode
+  isHost=false; mySeat=-1;
+  players=[];
+  document.getElementById('lobbyTitle').textContent='ელოდება მოთამაშეებს... ('+humanCount+' საჭიროა)';
+  document.getElementById('lobbyHint').textContent='როცა '+humanCount+' მოთამაშე შეიკრიბება, თამაში ავტომატურად დაიწყება';
   showScreen('lobbyScreen');
-  document.getElementById('startNowBtn').style.display='none';
   joinChan();
+  // Announce self after channel connects
   setTimeout(()=>{
     chan.send({type:'broadcast',event:'pjoin',payload:{id:myId,charId:myChar.id,name:myChar.name,img:myChar.img}});
   },1200);
 }
-function genCode(){const c='ABCDEFGHJKLMNPQRSTUVWXYZ';let r='';for(let i=0;i<4;i++)r+=c[Math.floor(Math.random()*c.length)];return r;}
-function shareLink(){
-  const link=location.origin+location.pathname+'?room='+roomCode;
-  if(navigator.share){
-    navigator.share({title:'Brainrot UNO',text:'მოდი ვითამაშოთ! 🦈',url:link}).catch(()=>{});
-  }else{
-    navigator.clipboard.writeText(link).then(()=>showToast('ლინკი დაკოპირდა!',1500));
-  }
-}
-function startLobbyTimer(){
-  lobbySeconds=120;
-  document.getElementById('timerEl').textContent=lobbySeconds;
-  if(lobbyTimer)clearInterval(lobbyTimer);
-  lobbyTimer=setInterval(()=>{
-    lobbySeconds--;
-    document.getElementById('timerEl').textContent=lobbySeconds;
-    if(lobbySeconds<=0){clearInterval(lobbyTimer);lobbyTimer=null;fillBotsAndStart();}
-  },1000);
-}
-function startNow(){if(lobbyTimer){clearInterval(lobbyTimer);lobbyTimer=null;}fillBotsAndStart();}
 function fillBotsAndStart(){
-  // Fill empty seats with bots
   const takenChars=players.map(p=>p.charId);
   const availChars=CHARS.filter(c=>!takenChars.includes(c.id));
   let botIdx=0;
@@ -311,15 +282,6 @@ function fillBotsAndStart(){
   hostStart();
 }
 
-/* ═══ AUTO JOIN FROM URL ═══ */
-window.addEventListener('DOMContentLoaded',()=>{
-  const params=new URLSearchParams(location.search);
-  const room=params.get('room');
-  if(room&&room.length===4){
-    // Wait for Supabase to load
-    const wait=setInterval(()=>{if(window.supabase){clearInterval(wait);autoJoin(room.toUpperCase());}},200);
-  }
-});
 
 /* ═══ LOBBY SLOTS ═══ */
 function renderSlots(){
@@ -331,7 +293,6 @@ function renderSlots(){
     else{d.className='player-slot';d.innerHTML='<div class="slot-empty">?</div><div class="slot-name">ცარიელი</div>';}
     el.appendChild(d);
   }
-  document.getElementById('startNowBtn').style.display=(isHost&&players.length>=2)?'':'none';
 }
 
 /* ═══ SUPABASE CHANNEL ═══ */
@@ -340,22 +301,20 @@ function joinChan(){
   chan=sb.channel('uno-'+roomCode,{config:{broadcast:{self:false}}});
 
   chan.on('broadcast',{event:'pjoin'},({payload:p})=>{
-    if(isHost&&players.length<4&&!players.find(x=>x.id===p.id)){
+    if(isHost&&players.length<needHumans&&!players.find(x=>x.id===p.id)){
       const taken=players.map(x=>x.seat);
       p.seat=[0,1,2,3].find(s=>!taken.includes(s));
       players.push(p);
       renderSlots();
-      chan.send({type:'broadcast',event:'plist',payload:{players,timer:lobbySeconds}});
-      // If room is full, start immediately
-      if(players.length>=4){if(lobbyTimer){clearInterval(lobbyTimer);lobbyTimer=null;}fillBotsAndStart();}
+      chan.send({type:'broadcast',event:'plist',payload:{players}});
+      // If enough humans, fill bots and start
+      if(players.length>=needHumans){fillBotsAndStart();}
     }
   });
   chan.on('broadcast',{event:'plist'},({payload:d})=>{
     players=d.players;
     const me=players.find(p=>p.id===myId);
-    if(me){mySeat=me.seat;showScreen('lobbyScreen');
-      if(d.timer!==undefined)document.getElementById('timerEl').textContent=d.timer;
-    }
+    if(me){mySeat=me.seat;showScreen('lobbyScreen');}
     renderSlots();
   });
   chan.on('broadcast',{event:'gstart'},({payload:d})=>{
@@ -369,13 +328,24 @@ function joinChan(){
   chan.on('broadcast',{event:'paction'},({payload:a})=>{if(isHost)handleAction(a);});
   chan.on('broadcast',{event:'pleave'},({payload:d})=>{
     players=players.filter(p=>p.id!==d.id); renderSlots();
-    if(isHost)chan.send({type:'broadcast',event:'plist',payload:{players,timer:lobbySeconds}});
+    if(isHost)chan.send({type:'broadcast',event:'plist',payload:{players}});
   });
-  chan.subscribe();
+  chan.subscribe((status)=>{
+    if(status==='SUBSCRIBED'){
+      // First one in becomes host
+      setTimeout(()=>{
+        if(players.length===0){
+          isHost=true; mySeat=0;
+          players=[{id:myId,charId:myChar.id,name:myChar.name,img:myChar.img,seat:0}];
+          renderSlots();
+          if(needHumans<=1){fillBotsAndStart();}
+        }
+      },800);
+    }
+  });
 }
 
 function leaveRoom(){
-  if(lobbyTimer){clearInterval(lobbyTimer);lobbyTimer=null;}
   if(chan){chan.send({type:'broadcast',event:'pleave',payload:{id:myId}});sb.removeChannel(chan);chan=null;}
   players=[];showScreen('menuScreen');
 }
