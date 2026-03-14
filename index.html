@@ -460,7 +460,7 @@ function playCard(player, cardIndex) {
   }
 
   render();
-  if (gameActive && currentPlayer !== 0) setTimeout(botTurn, 800 + Math.random()*800);
+  if (gameActive && currentPlayer !== 0) setTimeout(botTurn, 1500 + Math.random()*1200);
 }
 
 function pickColor(color) {
@@ -472,7 +472,7 @@ function pickColor(color) {
   nextPlayer();
   pendingWild = null;
   render();
-  if (gameActive && currentPlayer !== 0) setTimeout(botTurn, 800 + Math.random()*800);
+  if (gameActive && currentPlayer !== 0) setTimeout(botTurn, 1500 + Math.random()*1200);
 }
 
 function playerDraw() {
@@ -506,7 +506,7 @@ function botTurn() {
     showToast(PLAYER_NAMES[p] + ': ' + botQuips[Math.floor(Math.random()*botQuips.length)], 1000);
     nextPlayer();
     render();
-    if (gameActive && currentPlayer !== 0) setTimeout(botTurn, 800 + Math.random()*800);
+    if (gameActive && currentPlayer !== 0) setTimeout(botTurn, 1500 + Math.random()*1200);
     return;
   }
 
@@ -516,7 +516,7 @@ function botTurn() {
   let botPlays = ['ტრალალერო! 🦈','პატაპიმ! 💥','საჰურ! 🔔','კროკოდილო! 🐊'];
   showToast(PLAYER_NAMES[p] + ': ' + botPlays[Math.floor(Math.random()*botPlays.length)], 800);
 
-  setTimeout(() => playCard(p, pick), 400);
+  setTimeout(() => playCard(p, pick), 800);
 }
 
 function botPickColor(player) {
