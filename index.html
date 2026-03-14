@@ -39,6 +39,11 @@ body { font-family:'Segoe UI',system-ui,sans-serif; background:#1a0a2e; color:#f
 .player-slot .slot-name { font-size:12px; font-weight:600; }
 .player-slot .slot-empty { font-size:24px; opacity:0.3; }
 .share-hint { font-size:13px; color:#64748b; text-align:center; max-width:280px; }
+.timer { font-size:64px; font-weight:900; color:#ff6b00; text-shadow:0 0 20px rgba(255,107,0,0.4); }
+.timer-label { font-size:14px; color:#94a3b8; }
+.link-box { display:flex; gap:8px; align-items:center; }
+.link-url { background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:10px; padding:10px 14px; font-size:13px; color:#fff; max-width:220px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.copy-btn { background:#ff6b00; border:none; color:#fff; padding:10px 16px; border-radius:10px; font-size:14px; font-weight:700; cursor:pointer; }
 
 /* ── Join ── */
 .join { background:linear-gradient(135deg,#0f172a,#1e293b); padding:20px; }
@@ -153,34 +158,22 @@ body { font-family:'Segoe UI',system-ui,sans-serif; background:#1a0a2e; color:#f
   <p class="subtitle">ტრალალერო ტრალალა × ბომბარდირო კროკოდილო</p>
   <div class="btn-group">
     <button class="btn btn-orange" onclick="startSolo()">მარტო თამაში 🤖</button>
-    <button class="btn btn-purple" onclick="showCreate()">ოთახის შექმნა 🏠</button>
-    <button class="btn btn-dark" onclick="showJoin()">ოთახში შესვლა 🔑</button>
+    <button class="btn btn-purple" onclick="showCreate()">ონლაინ თამაში 🌐</button>
   </div>
 </div>
 
 <!-- ═══ LOBBY ═══ -->
 <div class="screen lobby" id="lobbyScreen">
-  <p class="room-code-label">ოთახის კოდი — გაუგზავნე მეგობრებს</p>
-  <div class="room-code" id="roomCodeEl">----</div>
+  <div class="timer" id="timerEl">60</div>
+  <p class="timer-label">წამში თამაში დაიწყება</p>
   <div class="player-slots" id="playerSlots"></div>
-  <button class="btn btn-orange" id="startBtn" style="display:none" onclick="hostStart()">დაწყება 🎮</button>
-  <button class="btn btn-dark" onclick="leaveRoom()">გასვლა</button>
-</div>
-
-<!-- ═══ JOIN ═══ -->
-<div class="screen join" id="joinScreen">
-  <h2>შეიყვანე კოდი</h2>
-  <div class="code-input" id="codeInput">
-    <input type="text" maxlength="1" inputmode="text" autocapitalize="characters">
-    <input type="text" maxlength="1" inputmode="text" autocapitalize="characters">
-    <input type="text" maxlength="1" inputmode="text" autocapitalize="characters">
-    <input type="text" maxlength="1" inputmode="text" autocapitalize="characters">
+  <div class="link-box">
+    <div class="link-url" id="linkUrl">...</div>
+    <button class="copy-btn" onclick="copyLink()">📋</button>
   </div>
-  <h3 style="margin-top:12px">აირჩიე პერსონაჟი</h3>
-  <div class="char-pick" id="charPick"></div>
-  <p class="error-msg" id="joinError"></p>
-  <button class="btn btn-orange" onclick="doJoin()">შესვლა</button>
-  <button class="btn btn-dark" onclick="showScreen('menuScreen')">უკან</button>
+  <p class="share-hint">ლინკი გაუგზავნე ოჯახს — ვინც შემოვა ავტომატურად ემატება. ცარიელ ადგილებზე ბოტები დაჯდებიან.</p>
+  <button class="btn btn-orange" id="startNowBtn" style="display:none" onclick="startNow()">ახლავე დაწყება ▶</button>
+  <button class="btn btn-dark" onclick="leaveRoom()">გასვლა</button>
 </div>
 
 <!-- ═══ GAME ═══ -->
@@ -189,6 +182,8 @@ body { font-family:'Segoe UI',system-ui,sans-serif; background:#1a0a2e; color:#f
   <div class="player-area seat-1" id="seat1"><div class="player-label" id="label1"></div><div class="player-cards" id="hand1"></div><span class="card-count" id="count1"></span></div>
   <div class="player-area seat-2" id="seat2"><div class="player-label" id="label2"></div><div class="player-cards" id="hand2"></div><span class="card-count" id="count2"></span></div>
   <div class="player-area seat-3" id="seat3"><div class="player-label" id="label3"></div><div class="player-cards" id="hand3"></div><span class="card-count" id="count3"></span></div>
+
+  <div style="position:absolute;top:12px;left:12px;z-index:30"><button class="btn btn-dark" style="padding:8px 16px;font-size:14px;border-radius:12px" onclick="backToMenu()">← მენიუ</button></div>
 
   <div class="center">
     <div class="pile-card draw-pile" id="drawPile" onclick="playerDraw()">აიღე<br>🦈</div>
@@ -258,6 +253,7 @@ let players=[];  // [{id,charId,name,img,seat}]
 let gs=null;     // game state
 let solo=false;
 let unoCallable=false, unoTimer=null;
+let lobbyTimer=null, lobbySeconds=60;
 
 /* ═══════════════════════════════════════════
    SCREENS
@@ -268,43 +264,69 @@ function initSB(){if(!sb)sb=window.supabase.createClient(SB_URL,SB_KEY);}
 /* ═══ MENU ═══ */
 function showCreate(){
   initSB(); isHost=true;
-  roomCode=genCode(); myChar=CHARS[0]; mySeat=0;
+  roomCode=genCode();
+  // Pick random character for host
+  myChar=CHARS[Math.floor(Math.random()*CHARS.length)];
+  mySeat=0;
   players=[{id:myId,charId:myChar.id,name:myChar.name,img:myChar.img,seat:0}];
-  document.getElementById('roomCodeEl').textContent=roomCode;
-  renderSlots(); showScreen('lobbyScreen'); joinChan();
+  const link=location.origin+location.pathname+'?room='+roomCode;
+  document.getElementById('linkUrl').textContent=link;
+  renderSlots(); showScreen('lobbyScreen'); joinChan(); startLobbyTimer();
 }
-function showJoin(){
-  initSB(); isHost=false; myChar=null;
-  document.getElementById('joinError').textContent='';
-  renderCharPick([]); showScreen('joinScreen');
-  const inps=document.querySelectorAll('#codeInput input');
-  inps.forEach(i=>{i.value='';});
-  setupCodeInps(); inps[0].focus();
+function autoJoin(code){
+  initSB(); isHost=false;
+  roomCode=code;
+  myChar=CHARS[Math.floor(Math.random()*CHARS.length)];
+  showScreen('lobbyScreen');
+  document.getElementById('linkUrl').textContent='შემოსვლა...';
+  document.getElementById('startNowBtn').style.display='none';
+  joinChan();
+  setTimeout(()=>{
+    chan.send({type:'broadcast',event:'pjoin',payload:{id:myId,charId:myChar.id,name:myChar.name,img:myChar.img}});
+  },1200);
 }
 function genCode(){const c='ABCDEFGHJKLMNPQRSTUVWXYZ';let r='';for(let i=0;i<4;i++)r+=c[Math.floor(Math.random()*c.length)];return r;}
-
-/* ═══ CODE INPUT ═══ */
-function setupCodeInps(){
-  const inps=document.querySelectorAll('#codeInput input');
-  inps.forEach((inp,i)=>{
-    inp.oninput=()=>{inp.value=inp.value.toUpperCase().replace(/[^A-Z]/g,'');if(inp.value&&i<3)inps[i+1].focus();};
-    inp.onkeydown=(e)=>{if(e.key==='Backspace'&&!inp.value&&i>0)inps[i-1].focus();};
+function copyLink(){
+  const link=location.origin+location.pathname+'?room='+roomCode;
+  navigator.clipboard.writeText(link).then(()=>{
+    const btn=document.querySelector('.copy-btn');btn.textContent='✅';setTimeout(()=>btn.textContent='📋',1500);
   });
 }
-function getCode(){return Array.from(document.querySelectorAll('#codeInput input')).map(i=>i.value).join('');}
-
-/* ═══ CHAR PICKER ═══ */
-function renderCharPick(taken){
-  const el=document.getElementById('charPick'); el.innerHTML='';
-  CHARS.forEach(ch=>{
-    const d=document.createElement('div');
-    const t=taken.includes(ch.id);
-    d.className='char-option'+(myChar&&myChar.id===ch.id?' selected':'')+(t?' taken':'');
-    d.innerHTML='<img src="'+ch.img+'">';
-    if(!t)d.onclick=()=>{myChar=ch;renderCharPick(taken);};
-    el.appendChild(d);
-  });
+function startLobbyTimer(){
+  lobbySeconds=60;
+  document.getElementById('timerEl').textContent=lobbySeconds;
+  if(lobbyTimer)clearInterval(lobbyTimer);
+  lobbyTimer=setInterval(()=>{
+    lobbySeconds--;
+    document.getElementById('timerEl').textContent=lobbySeconds;
+    if(lobbySeconds<=0){clearInterval(lobbyTimer);lobbyTimer=null;fillBotsAndStart();}
+  },1000);
 }
+function startNow(){if(lobbyTimer){clearInterval(lobbyTimer);lobbyTimer=null;}fillBotsAndStart();}
+function fillBotsAndStart(){
+  // Fill empty seats with bots
+  const takenChars=players.map(p=>p.charId);
+  const availChars=CHARS.filter(c=>!takenChars.includes(c.id));
+  let botIdx=0;
+  while(players.length<4){
+    const taken=players.map(p=>p.seat);
+    const seat=[0,1,2,3].find(s=>!taken.includes(s));
+    const ch=availChars[botIdx%availChars.length];
+    players.push({id:'bot'+botIdx,charId:ch.id,name:ch.name+' 🤖',img:ch.img,seat,isBot:true});
+    botIdx++;
+  }
+  hostStart();
+}
+
+/* ═══ AUTO JOIN FROM URL ═══ */
+window.addEventListener('DOMContentLoaded',()=>{
+  const params=new URLSearchParams(location.search);
+  const room=params.get('room');
+  if(room&&room.length===4){
+    // Wait for Supabase to load
+    const wait=setInterval(()=>{if(window.supabase){clearInterval(wait);autoJoin(room.toUpperCase());}},200);
+  }
+});
 
 /* ═══ LOBBY SLOTS ═══ */
 function renderSlots(){
@@ -316,7 +338,7 @@ function renderSlots(){
     else{d.className='player-slot';d.innerHTML='<div class="slot-empty">?</div><div class="slot-name">ცარიელი</div>';}
     el.appendChild(d);
   }
-  document.getElementById('startBtn').style.display=(isHost&&players.length>=2)?'':'none';
+  document.getElementById('startNowBtn').style.display=(isHost&&players.length>=2)?'':'none';
 }
 
 /* ═══ SUPABASE CHANNEL ═══ */
@@ -330,13 +352,19 @@ function joinChan(){
       p.seat=[0,1,2,3].find(s=>!taken.includes(s));
       players.push(p);
       renderSlots();
-      chan.send({type:'broadcast',event:'plist',payload:{players}});
+      chan.send({type:'broadcast',event:'plist',payload:{players,timer:lobbySeconds}});
+      // If room is full, start immediately
+      if(players.length>=4){if(lobbyTimer){clearInterval(lobbyTimer);lobbyTimer=null;}fillBotsAndStart();}
     }
   });
   chan.on('broadcast',{event:'plist'},({payload:d})=>{
     players=d.players;
     const me=players.find(p=>p.id===myId);
-    if(me){mySeat=me.seat;showScreen('lobbyScreen');document.getElementById('roomCodeEl').textContent=roomCode;}
+    if(me){mySeat=me.seat;showScreen('lobbyScreen');
+      const link=location.origin+location.pathname+'?room='+roomCode;
+      document.getElementById('linkUrl').textContent=link;
+      if(d.timer!==undefined)document.getElementById('timerEl').textContent=d.timer;
+    }
     renderSlots();
   });
   chan.on('broadcast',{event:'gstart'},({payload:d})=>{
@@ -350,22 +378,13 @@ function joinChan(){
   chan.on('broadcast',{event:'paction'},({payload:a})=>{if(isHost)handleAction(a);});
   chan.on('broadcast',{event:'pleave'},({payload:d})=>{
     players=players.filter(p=>p.id!==d.id); renderSlots();
-    if(isHost)chan.send({type:'broadcast',event:'plist',payload:{players}});
+    if(isHost)chan.send({type:'broadcast',event:'plist',payload:{players,timer:lobbySeconds}});
   });
   chan.subscribe();
 }
 
-/* ═══ JOIN ROOM ═══ */
-function doJoin(){
-  const code=getCode();
-  if(code.length<4){document.getElementById('joinError').textContent='4 ასო შეიყვანე';return;}
-  if(!myChar){document.getElementById('joinError').textContent='აირჩიე პერსონაჟი';return;}
-  roomCode=code.toUpperCase(); joinChan();
-  setTimeout(()=>{chan.send({type:'broadcast',event:'pjoin',payload:{id:myId,charId:myChar.id,name:myChar.name,img:myChar.img}});},1000);
-  document.getElementById('joinError').textContent='ელოდება...';
-  setTimeout(()=>{if(mySeat<0)document.getElementById('joinError').textContent='ოთახი ვერ მოიძებნა';},6000);
-}
 function leaveRoom(){
+  if(lobbyTimer){clearInterval(lobbyTimer);lobbyTimer=null;}
   if(chan){chan.send({type:'broadcast',event:'pleave',payload:{id:myId}});sb.removeChannel(chan);chan=null;}
   players=[];showScreen('menuScreen');
 }
@@ -395,7 +414,37 @@ function makeState(np){
 function hostStart(){
   gs=makeState(players.length);
   chan.send({type:'broadcast',event:'gstart',payload:{state:gs,players}});
-  solo=false; showScreen('tableScreen'); render();
+  solo=false; showScreen('tableScreen');
+  document.getElementById('gameOver').classList.remove('visible');
+  render(); scheduleOnlineBot();
+}
+function scheduleOnlineBot(){
+  if(!gs||!isHost)return;
+  const cp=gs.currentPlayer;
+  const p=players[cp];
+  if(p&&p.isBot){
+    setTimeout(()=>onlineBotTurn(cp),1500+Math.random()*1200);
+  }
+}
+function onlineBotTurn(seat){
+  if(!gs||gs.currentPlayer!==seat)return;
+  const p=players[seat];
+  if(!p||!p.isBot)return;
+  let ok=[];gs.hands[seat].forEach((c,i)=>{if(canPlay(c))ok.push(i);});
+  if(ok.length===0){
+    handleAction({type:'draw',seat});
+  }else{
+    const pick=ok[Math.floor(Math.random()*ok.length)];
+    const card=gs.hands[seat][pick];
+    handleAction({type:'play',seat,cardIndex:pick});
+    // If wild, pick color
+    if(card.type==='wild'||card.type==='wild4'){
+      setTimeout(()=>{
+        const color=botColor(seat);
+        handleAction({type:'pick_color',seat,color});
+      },600);
+    }
+  }
 }
 
 /* ═══ HOST: HANDLE ACTION ═══ */
@@ -418,7 +467,7 @@ function handleAction(a){
 }
 function bcast(state,toast){
   gs=state; chan.send({type:'broadcast',event:'gstate',payload:{state:gs,toast}});
-  if(toast)showToast(toast,1200); render(); checkWin();
+  if(toast)showToast(toast,1200); render(); checkWin(); scheduleOnlineBot();
 }
 
 /* ═══════════════════════════════════════════
