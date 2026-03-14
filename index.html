@@ -466,23 +466,32 @@ function render(){
 
     handEl.innerHTML='';
     if(i===mySeat){
+      const handCount=gs.hands[i].length;
+      const cardW=window.innerWidth<=600?62:90;
+      const maxW=window.innerWidth-24;
+      const ov=handCount>1?Math.max(-(cardW-14),Math.min(-12,(maxW-cardW)/(handCount-1)-cardW)):0;
       gs.hands[i].forEach((card,ci)=>{
         const el=document.createElement('div');
         const ok=myTurn&&canPlay(card);
         el.className='card '+cclass(card)+(ok?' playable':'');
         el.innerHTML='<span>'+cimg(card)+'</span><span class="card-label">'+clbl(card)+'</span>';
-        const ov=gs.hands[i].length>12?-35:gs.hands[i].length>8?-25:-12;
         el.style.marginLeft=ci>0?ov+'px':'0';
         el.style.zIndex=ci;
         if(ok)el.onclick=()=>doPlay(ci);
         handEl.appendChild(el);
       });
     }else{
-      const mx=Math.min(gs.hands[i].length,10);
-      for(let ci=0;ci<mx;ci++){
+      const otherCount=gs.hands[i].length;
+      const smallW=window.innerWidth<=600?26:30;
+      const smallH=window.innerWidth<=600?38:44;
+      let maxDim,cardDim;
+      if(vs===1||vs===3){maxDim=window.innerHeight*0.4;cardDim=smallH;}
+      else{maxDim=window.innerWidth*0.6;cardDim=smallW;}
+      const otherOv=otherCount>1?Math.max(-(cardDim-6),Math.min(-6,(maxDim-cardDim)/(otherCount-1)-cardDim)):0;
+      for(let ci=0;ci<otherCount;ci++){
         const el=document.createElement('div');el.className='card card-back small';
-        if(vs===1||vs===3)el.style.marginTop=ci>0?'-24px':'0';
-        else el.style.marginLeft=ci>0?'-16px':'0';
+        if(vs===1||vs===3)el.style.marginTop=ci>0?otherOv+'px':'0';
+        else el.style.marginLeft=ci>0?otherOv+'px':'0';
         handEl.appendChild(el);
       }
       const cnt=document.getElementById('count'+vs);
