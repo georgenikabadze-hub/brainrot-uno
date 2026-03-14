@@ -37,7 +37,7 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: #1a0a2e; colo
 .player-area.left .player-cards, .player-area.right .player-cards { flex-direction:column; gap:-30px; }
 
 /* Cards */
-.card { width:60px; height:90px; border-radius:10px; display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:24px; box-shadow: 0 2px 8px rgba(0,0,0,0.4); border:2px solid rgba(255,255,255,0.2); transition: transform 0.15s, margin-top 0.15s; cursor:default; flex-shrink:0; position:relative; }
+.card { width:70px; height:105px; border-radius:10px; display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:24px; box-shadow: 0 2px 8px rgba(0,0,0,0.4); border:2px solid rgba(255,255,255,0.2); transition: transform 0.15s, margin-top 0.15s; cursor:default; flex-shrink:0; position:relative; }
 .card.small { width:40px; height:60px; font-size:16px; border-radius:8px; }
 .card-label { font-size:8px; font-weight:700; margin-top:2px; text-shadow:0 1px 2px rgba(0,0,0,0.5); }
 .card.small .card-label { font-size:6px; }
@@ -101,10 +101,12 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: #1a0a2e; colo
 
 /* Responsive */
 @media(max-width:600px) {
-  .card { width:48px; height:72px; font-size:20px; border-radius:8px; }
+  .card { width:56px; height:84px; font-size:20px; border-radius:8px; }
   .card.small { width:32px; height:48px; font-size:14px; }
+  .card-img { width:32px; height:32px; }
   .pile-card { width:64px; height:96px; font-size:28px; }
   .player-label { font-size:11px; }
+  .player-avatar { width:22px; height:22px; }
 }
 </style>
 </head>
@@ -119,8 +121,8 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: #1a0a2e; colo
     <img src="https://www.playbrainrot.org/images/characters/chimpanzini-bananini.webp" style="width:64px;height:64px;object-fit:contain">
   </div>
   <h1>BRAINROT UNO</h1>
-  <p class="subtitle">tralalero tralala × bombardiro crocodilo edition</p>
-  <button onclick="startGame()">PLAY 🎮</button>
+  <p class="subtitle">ტრალალერო ტრალალა × ბომბარდირო კროკოდილო</p>
+  <button onclick="startGame()">თამაში 🎮</button>
 </div>
 
 <div class="table" id="table" style="display:none">
@@ -148,14 +150,14 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: #1a0a2e; colo
   <!-- Center -->
   <div class="direction" id="dirArrow">🔄</div>
   <div class="center">
-    <div class="pile-card draw-pile" id="drawPile" onclick="playerDraw()">DRAW<br>🦈</div>
+    <div class="pile-card draw-pile" id="drawPile" onclick="playerDraw()">აიღე<br>🦈</div>
     <div class="pile-card" id="discardPile"></div>
   </div>
 
   <button class="uno-btn" id="unoBtn" onclick="callUno()">UNO!</button>
 
   <div class="color-picker" id="colorPicker">
-    <h3>Pick a color fam 💅</h3>
+    <h3>აირჩიე ფერი 💅</h3>
     <div class="color-options">
       <div class="color-option red" onclick="pickColor('red')"></div>
       <div class="color-option blue" onclick="pickColor('blue')"></div>
@@ -170,7 +172,7 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: #1a0a2e; colo
 <div class="game-over" id="gameOver">
   <div class="winner-emoji" id="winnerEmoji"></div>
   <h1 id="winnerText"></h1>
-  <button onclick="startGame()">Play Again 🔄</button>
+  <button onclick="startGame()">თავიდან 🔄</button>
 </div>
 
 <script>
@@ -322,7 +324,8 @@ function render() {
     let playable = currentPlayer === 0 && gameActive && canPlay(card);
     el.className = 'card ' + cardColorClass(card) + (playable ? ' playable' : '');
     el.innerHTML = '<span>' + cardEmoji(card, true) + '</span><span class="card-label">' + cardLabel(card) + '</span>';
-    el.style.marginLeft = i > 0 ? '-15px' : '0';
+    let overlap = hands[0].length > 12 ? -30 : hands[0].length > 8 ? -22 : -15;
+    el.style.marginLeft = i > 0 ? overlap+'px' : '0';
     if (playable) el.onclick = () => playCard(0, i);
     p0.appendChild(el);
   });
@@ -339,7 +342,7 @@ function render() {
       else c.style.marginLeft = i > 0 ? '-20px' : '0';
       el.appendChild(c);
     }
-    document.getElementById('p'+p+'count').textContent = hands[p].length + ' cards';
+    document.getElementById('p'+p+'count').textContent = hands[p].length + ' კარტი';
   }
 
   // Discard pile
@@ -378,7 +381,7 @@ function playCard(player, cardIndex) {
 
   // Brainrot toast for fun
   if (card.type === 'number') {
-    let quips = ['tralalero! 🦈','tralala! 👟','bombardiro! 🐊','crocodilo! 🍉','lirili larila! 🩰','cappuccino! ☕','brrr brr patapim! 💥','tung tung sahur! 🔔'];
+    let quips = ['ტრალალერო! 🦈','ტრალალა! 👟','ბომბარდირო! 🐊','კროკოდილო! 🍉','ლირილი ლარილა! 🩰','კაპუჩინო! ☕','ბრრრ ბრრ პატაპიმ! 💥','ტუნგ ტუნგ საჰურ! 🔔'];
     if (player === 0) showToast(quips[Math.floor(Math.random()*quips.length)], 800);
   }
 
@@ -388,9 +391,9 @@ function playCard(player, cardIndex) {
   if (hands[player].length === 1) {
     if (player === 0) {
       unoCallable = true;
-      setTimeout(() => { if (unoCallable) { unoCallable = false; hands[0].push(...drawCards(2)); showToast('Forgot UNO! +2 💀', 1500); render(); } }, 3000);
+      setTimeout(() => { if (unoCallable) { unoCallable = false; hands[0].push(...drawCards(2)); showToast('UNO დაგავიწყდა! +2 💀', 1500); render(); } }, 3000);
     } else {
-      setTimeout(() => showToast(PLAYER_NAMES[player] + ' says UNO! 😱', 1200), 500);
+      setTimeout(() => showToast(PLAYER_NAMES[player] + ' ამბობს UNO! 😱', 1200), 500);
     }
   }
 
@@ -400,7 +403,7 @@ function playCard(player, cardIndex) {
     render();
     setTimeout(() => {
       document.getElementById('winnerEmoji').innerHTML = '<img src="'+PLAYER_IMGS[player]+'" style="width:80px;height:80px;object-fit:contain">';
-      document.getElementById('winnerText').textContent = (player === 0 ? 'YOU WIN! 🏆' : PLAYER_NAMES[player] + ' wins!');
+      document.getElementById('winnerText').textContent = (player === 0 ? 'შენ მოიგე! 🏆' : PLAYER_NAMES[player] + ' მოიგო!');
       document.getElementById('gameOver').classList.add('visible');
     }, 500);
     return;
@@ -408,17 +411,17 @@ function playCard(player, cardIndex) {
 
   // Apply special effects
   if (card.type === 'skip') {
-    showToast(PLAYER_NAMES[(currentPlayer+direction+4)%4] + ' SKIPPED! 🚫', 1200);
+    showToast(PLAYER_NAMES[(currentPlayer+direction+4)%4] + ' გამოტოვა! 🚫', 1200);
     nextPlayer();
     nextPlayer();
   } else if (card.type === 'reverse') {
     direction *= -1;
-    showToast('REVERSE! 🔄', 1000);
+    showToast('რევერსი! 🔄', 1000);
     nextPlayer();
   } else if (card.type === 'draw2') {
     let victim = (currentPlayer + direction + 4) % 4;
     hands[victim].push(...drawCards(2));
-    showToast(PLAYER_NAMES[victim] + ' draws 2! 😭', 1200);
+    showToast(PLAYER_NAMES[victim] + ' +2 აიღო! 😭', 1200);
     nextPlayer();
     nextPlayer();
   } else if (card.type === 'wild') {
@@ -429,7 +432,7 @@ function playCard(player, cardIndex) {
       return;
     } else {
       currentColor = botPickColor(player);
-      showToast(PLAYER_NAMES[player] + ' picks ' + currentColor + '!', 1000);
+      showToast(PLAYER_NAMES[player] + ' ირჩევს ' + currentColor + '!', 1000);
       nextPlayer();
     }
   } else if (card.type === 'wild4') {
@@ -438,12 +441,12 @@ function playCard(player, cardIndex) {
     if (player === 0) {
       pendingWild = 'wild4';
       document.getElementById('colorPicker').classList.add('visible');
-      showToast(PLAYER_NAMES[victim] + ' draws 4! 💀', 1200);
+      showToast(PLAYER_NAMES[victim] + ' +4 აიღო! 💀', 1200);
       render();
       return;
     } else {
       currentColor = botPickColor(player);
-      showToast(PLAYER_NAMES[victim] + ' draws 4! ' + currentColor + '! 💀', 1200);
+      showToast(PLAYER_NAMES[victim] + ' +4 აიღო! ' + currentColor + '! 💀', 1200);
       nextPlayer();
       nextPlayer();
     }
@@ -470,7 +473,7 @@ function pickColor(color) {
 function playerDraw() {
   if (currentPlayer !== 0 || !gameActive) return;
   hands[0].push(...drawCards(1));
-  showToast('Drew a card 📥', 800);
+  showToast('კარტი აიღე 📥', 800);
   nextPlayer();
   render();
   if (currentPlayer !== 0) setTimeout(botTurn, 800 + Math.random()*800);
@@ -494,7 +497,7 @@ function botTurn() {
   if (playable.length === 0) {
     // Draw
     hands[p].push(...drawCards(1));
-    let botQuips = ['mamma mia! 😭','no cardiro! 💀','tralala sad 😢','bombardiro fail 📉'];
+    let botQuips = ['მამა მია! 😭','კარტი არ მაქვს! 💀','ტრალალა სედ 😢','ბომბარდირო ფეილ 📉'];
     showToast(PLAYER_NAMES[p] + ': ' + botQuips[Math.floor(Math.random()*botQuips.length)], 1000);
     nextPlayer();
     render();
@@ -505,7 +508,7 @@ function botTurn() {
   // Easy bot: play random valid card
   let pick = playable[Math.floor(Math.random() * playable.length)];
   let card = hands[p][pick];
-  let botPlays = ['tralalero! 🦈','patapim! 💥','sahur! 🔔','crocodilo! 🐊'];
+  let botPlays = ['ტრალალერო! 🦈','პატაპიმ! 💥','საჰურ! 🔔','კროკოდილო! 🐊'];
   showToast(PLAYER_NAMES[p] + ': ' + botPlays[Math.floor(Math.random()*botPlays.length)], 800);
 
   setTimeout(() => playCard(p, pick), 400);
