@@ -386,8 +386,7 @@ function playCard(player, cardIndex) {
 
   // Brainrot toast for fun
   if (card.type === 'number') {
-    let quips = ['ტრალალერო! 🦈','ტრალალა! 👟','ბომბარდირო! 🐊','კროკოდილო! 🍉','ლირილი ლარილა! 🩰','კაპუჩინო! ☕','ბრრრ ბრრ პატაპიმ! 💥','ტუნგ ტუნგ საჰურ! 🔔'];
-    if (player === 0) showToast(quips[Math.floor(Math.random()*quips.length)], 800);
+    // no toast for regular plays
   }
 
   if (card.color !== 'wild') currentColor = card.color;
@@ -478,7 +477,7 @@ function pickColor(color) {
 function playerDraw() {
   if (currentPlayer !== 0 || !gameActive) return;
   hands[0].push(...drawCards(1));
-  showToast('კარტი აიღე 📥', 800);
+  // no toast for player draw
   nextPlayer();
   render();
   if (currentPlayer !== 0) setTimeout(botTurn, 800 + Math.random()*800);
@@ -502,8 +501,7 @@ function botTurn() {
   if (playable.length === 0) {
     // Draw
     hands[p].push(...drawCards(1));
-    let botQuips = ['მამა მია! 😭','კარტი არ მაქვს! 💀','ტრალალა სედ 😢','ბომბარდირო ფეილ 📉'];
-    showToast(PLAYER_NAMES[p] + ': ' + botQuips[Math.floor(Math.random()*botQuips.length)], 1000);
+    // no toast for bot draw
     nextPlayer();
     render();
     if (gameActive && currentPlayer !== 0) setTimeout(botTurn, 1500 + Math.random()*1200);
@@ -513,8 +511,7 @@ function botTurn() {
   // Easy bot: play random valid card
   let pick = playable[Math.floor(Math.random() * playable.length)];
   let card = hands[p][pick];
-  let botPlays = ['ტრალალერო! 🦈','პატაპიმ! 💥','საჰურ! 🔔','კროკოდილო! 🐊'];
-  showToast(PLAYER_NAMES[p] + ': ' + botPlays[Math.floor(Math.random()*botPlays.length)], 800);
+  // no toast for bot play
 
   setTimeout(() => playCard(p, pick), 800);
 }
