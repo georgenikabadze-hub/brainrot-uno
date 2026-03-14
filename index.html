@@ -41,9 +41,6 @@ body { font-family:'Segoe UI',system-ui,sans-serif; background:#1a0a2e; color:#f
 .share-hint { font-size:13px; color:#64748b; text-align:center; max-width:280px; }
 .timer { font-size:64px; font-weight:900; color:#ff6b00; text-shadow:0 0 20px rgba(255,107,0,0.4); }
 .timer-label { font-size:14px; color:#94a3b8; }
-.link-box { display:flex; gap:8px; align-items:center; }
-.link-url { background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2); border-radius:10px; padding:10px 14px; font-size:13px; color:#fff; max-width:220px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.copy-btn { background:#ff6b00; border:none; color:#fff; padding:10px 16px; border-radius:10px; font-size:14px; font-weight:700; cursor:pointer; }
 
 /* ── Join ── */
 .join { background:linear-gradient(135deg,#0f172a,#1e293b); padding:20px; }
@@ -167,11 +164,8 @@ body { font-family:'Segoe UI',system-ui,sans-serif; background:#1a0a2e; color:#f
   <div class="timer" id="timerEl">60</div>
   <p class="timer-label">წამში თამაში დაიწყება</p>
   <div class="player-slots" id="playerSlots"></div>
-  <div class="link-box">
-    <div class="link-url" id="linkUrl">...</div>
-    <button class="copy-btn" onclick="copyLink()">📋</button>
-  </div>
-  <p class="share-hint">ლინკი გაუგზავნე ოჯახს — ვინც შემოვა ავტომატურად ემატება. ცარიელ ადგილებზე ბოტები დაჯდებიან.</p>
+  <button class="btn btn-purple" onclick="shareLink()" style="font-size:18px;padding:14px 32px">გაგზავნე ლინკი 📤</button>
+  <p class="share-hint">ოჯახს გაუგზავნე — ვინც შემოვა ავტომატურად ემატება. ცარიელ ადგილებზე ბოტები დაჯდებიან.</p>
   <button class="btn btn-orange" id="startNowBtn" style="display:none" onclick="startNow()">ახლავე დაწყება ▶</button>
   <button class="btn btn-dark" onclick="leaveRoom()">გასვლა</button>
 </div>
@@ -269,8 +263,6 @@ function showCreate(){
   myChar=CHARS[Math.floor(Math.random()*CHARS.length)];
   mySeat=0;
   players=[{id:myId,charId:myChar.id,name:myChar.name,img:myChar.img,seat:0}];
-  const link=location.origin+location.pathname+'?room='+roomCode;
-  document.getElementById('linkUrl').textContent=link;
   renderSlots(); showScreen('lobbyScreen'); joinChan(); startLobbyTimer();
 }
 function autoJoin(code){
@@ -278,7 +270,6 @@ function autoJoin(code){
   roomCode=code;
   myChar=CHARS[Math.floor(Math.random()*CHARS.length)];
   showScreen('lobbyScreen');
-  document.getElementById('linkUrl').textContent='შემოსვლა...';
   document.getElementById('startNowBtn').style.display='none';
   joinChan();
   setTimeout(()=>{
@@ -286,14 +277,16 @@ function autoJoin(code){
   },1200);
 }
 function genCode(){const c='ABCDEFGHJKLMNPQRSTUVWXYZ';let r='';for(let i=0;i<4;i++)r+=c[Math.floor(Math.random()*c.length)];return r;}
-function copyLink(){
+function shareLink(){
   const link=location.origin+location.pathname+'?room='+roomCode;
-  navigator.clipboard.writeText(link).then(()=>{
-    const btn=document.querySelector('.copy-btn');btn.textContent='✅';setTimeout(()=>btn.textContent='📋',1500);
-  });
+  if(navigator.share){
+    navigator.share({title:'Brainrot UNO',text:'მოდი ვითამაშოთ! 🦈',url:link}).catch(()=>{});
+  }else{
+    navigator.clipboard.writeText(link).then(()=>showToast('ლინკი დაკოპირდა!',1500));
+  }
 }
 function startLobbyTimer(){
-  lobbySeconds=60;
+  lobbySeconds=120;
   document.getElementById('timerEl').textContent=lobbySeconds;
   if(lobbyTimer)clearInterval(lobbyTimer);
   lobbyTimer=setInterval(()=>{
@@ -361,8 +354,6 @@ function joinChan(){
     players=d.players;
     const me=players.find(p=>p.id===myId);
     if(me){mySeat=me.seat;showScreen('lobbyScreen');
-      const link=location.origin+location.pathname+'?room='+roomCode;
-      document.getElementById('linkUrl').textContent=link;
       if(d.timer!==undefined)document.getElementById('timerEl').textContent=d.timer;
     }
     renderSlots();
