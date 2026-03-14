@@ -428,7 +428,11 @@ function handleAction(a){
     else if(card.type==='wild'){bcast(gs,'');return;}
     else if(card.type==='wild4'){let v=nxt();gs.hands[v].push(...draw(4));toast=players[v].name+' +4 აიღო! 💀';bcast(gs,toast);return;}
     else{adv();}
-  }else if(a.type==='draw'){gs.hands[a.seat].push(...draw(1));adv();}
+  }else if(a.type==='draw'){
+    const drawn=draw(1)[0]; gs.hands[a.seat].push(drawn);
+    if(canPlay(drawn)){bcast(gs,'');scheduleOnlineBot();return;}
+    adv();
+  }
   else if(a.type==='pick_color'){gs.currentColor=a.color;if(gs.discardTop.type==='wild4')adv();adv();}
   else if(a.type==='uno_fail'){gs.hands[a.seat].push(...draw(2));toast=players[a.seat].name+' UNO დაავიწყდა! +2 💀';}
   bcast(gs,toast);
@@ -517,7 +521,11 @@ function doPlay(ci){
 }
 function playerDraw(){
   if(!gs||gs.currentPlayer!==mySeat)return;
-  if(solo){gs.hands[mySeat].push(...draw(1));adv();render();if(gs.currentPlayer!==mySeat)setTimeout(botTurn,1500+Math.random()*1200);}
+  if(solo){
+    const drawn=draw(1)[0]; gs.hands[mySeat].push(drawn);
+    if(canPlay(drawn)){showToast('აიღე — შეგიძლია დადო!',1200);render();return;}
+    adv();render();if(gs.currentPlayer!==mySeat)setTimeout(botTurn,800+Math.random()*700);
+  }
   else if(isHost){handleAction({type:'draw',seat:mySeat});}
   else{chan.send({type:'broadcast',event:'paction',payload:{type:'draw',seat:mySeat}});}
 }
@@ -591,7 +599,13 @@ function botTurn(){
   if(!gs||gs.currentPlayer===0)return;
   const p=gs.currentPlayer;
   let ok=[];gs.hands[p].forEach((c,i)=>{if(canPlay(c))ok.push(i);});
-  if(ok.length===0){gs.hands[p].push(...draw(1));adv();render();if(gs.currentPlayer!==0)setTimeout(botTurn,800+Math.random()*700);return;}
+  if(ok.length===0){
+    const drawn=draw(1)[0]; gs.hands[p].push(drawn);
+    if(canPlay(drawn)){
+      setTimeout(()=>playSolo(p,gs.hands[p].length-1),600);return;
+    }
+    adv();render();if(gs.currentPlayer!==0)setTimeout(botTurn,800+Math.random()*700);return;
+  }
   const pick=ok[Math.floor(Math.random()*ok.length)];
   setTimeout(()=>playSolo(p,pick),800);
 }
