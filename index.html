@@ -473,6 +473,7 @@ function render(){
         el.innerHTML='<span>'+cimg(card)+'</span><span class="card-label">'+clbl(card)+'</span>';
         const ov=gs.hands[i].length>12?-35:gs.hands[i].length>8?-25:-12;
         el.style.marginLeft=ci>0?ov+'px':'0';
+        el.style.zIndex=ci;
         if(ok)el.onclick=()=>doPlay(ci);
         handEl.appendChild(el);
       });
