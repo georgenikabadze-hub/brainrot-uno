@@ -328,7 +328,7 @@ function render() {
     let el = document.createElement('div');
     let playable = currentPlayer === 0 && gameActive && canPlay(card);
     el.className = 'card ' + cardColorClass(card) + (playable ? ' playable' : '');
-    el.innerHTML = '<span>' + cardEmoji(card, true) + '</span><span class="card-label">' + cardLabel(card) + '</span>';
+    el.innerHTML = '<span>' + cardEmoji(card, true) + '</span>';
     let overlap = hands[0].length > 12 ? -45 : hands[0].length > 8 ? -35 : -25;
     el.style.marginLeft = i > 0 ? overlap+'px' : '0';
     if (playable) el.onclick = () => playCard(0, i);
@@ -353,7 +353,7 @@ function render() {
   // Discard pile
   let dp = document.getElementById('discardPile');
   dp.className = 'pile-card ' + (discardTop.color === 'wild' ? 'card-' + currentColor : cardColorClass(discardTop));
-  dp.innerHTML = '<span>' + cardEmoji(discardTop, true) + '</span><span class="card-label">' + cardLabel(discardTop) + '</span>';
+  dp.innerHTML = '<span>' + cardEmoji(discardTop, true) + '</span>';
 
   // Active player highlight
   for (let p=0; p<4; p++) {
