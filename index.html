@@ -471,7 +471,7 @@ function render(){
         const ok=myTurn&&canPlay(card);
         el.className='card '+cclass(card)+(ok?' playable':'');
         el.innerHTML='<span>'+cimg(card)+'</span><span class="card-label">'+clbl(card)+'</span>';
-        const ov=gs.hands[i].length>12?-45:gs.hands[i].length>8?-35:-25;
+        const ov=gs.hands[i].length>12?-35:gs.hands[i].length>8?-25:-12;
         el.style.marginLeft=ci>0?ov+'px':'0';
         if(ok)el.onclick=()=>doPlay(ci);
         handEl.appendChild(el);
